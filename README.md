@@ -81,7 +81,7 @@
 <br>
 <br>
 
-2. `StudyCafeFileHandler.java`에서 파일경로를 매직스트링(상수로 추출)으로 사용 <br>
+2. `StudyCafeFileHandler.java`에서 파일경로를 매직스트링(상수로 추출)으로 사용해서 가독성도 올리고 파일경로가 수정되더라도 여기 한곳만 수정하면 편하겠다고 생각함. <br>
 
 [**리펙토링 전**]
 ```java
@@ -132,4 +132,75 @@
         }
     }
 ```
-   
+
+<br>
+<br>
+
+3. SRP관점에서 `readStudyCafePasses()`와`readLockerPasses()` 메소드안에 데이터 변환 기능을 분리해서 `readStudyCafePasses`와 `readLockerPasses`가 데이터 변환에 대한 책임을 가지지 않도록 해야겠다고 생각함. <br>
+[**리펙토링 전**]
+```java
+// StudyCafeFileHandler.java
+    public List<StudyCafePass> readStudyCafePasses() {
+        List<String> lines = getReadAllLines(PASS_LIST_FILE);
+        List<StudyCafePass> studyCafePasses = new ArrayList<>();
+        for (String line : lines) {
+            String[] values = line.split(",");
+            StudyCafePassType studyCafePassType = StudyCafePassType.valueOf(values[0]);
+            int duration = Integer.parseInt(values[1]);
+            int price = Integer.parseInt(values[2]);
+            double discountRate = Double.parseDouble(values[3]);
+
+            StudyCafePass studyCafePass = StudyCafePass.of(studyCafePassType, duration, price, discountRate);
+            studyCafePasses.add(studyCafePass);
+        }
+
+        return studyCafePasses;
+    }
+
+    public List<StudyCafeLockerPass> readLockerPasses() {
+        List<String> lines = getReadAllLines(LOCKER_PASS_FILE);
+        List<StudyCafeLockerPass> lockerPasses = new ArrayList<>();
+        for (String line : lines) {
+            String[] values = line.split(",");
+            StudyCafePassType studyCafePassType = StudyCafePassType.valueOf(values[0]);
+            int duration = Integer.parseInt(values[1]);
+            int price = Integer.parseInt(values[2]);
+
+            StudyCafeLockerPass lockerPass = StudyCafeLockerPass.of(studyCafePassType, duration, price);
+            lockerPasses.add(lockerPass);
+        }
+
+        return lockerPasses;
+    }
+```
+[**리펙토링 후**]
+```java
+// StudyCafeFileHandler.java
+    public List<StudyCafePass> readStudyCafePasses() {
+            List<String> lines = getReadAllLines(PASS_LIST_FILE);
+        return getStudyCafePasses(lines);
+    }
+
+    public List<StudyCafeLockerPass> readLockerPasses() {
+        List<String> lines = getReadAllLines(LOCKER_PASS_FILE);
+        return getStudyCafeLockerPasses(lines);
+    }
+
+    private static List<StudyCafePass> getStudyCafePasses(List<String> lines) {
+        List<StudyCafePass> studyCafePasses = new ArrayList<>();
+        for (String line : lines) {
+            ...(생략)
+        }
+
+        return studyCafePasses;
+    }
+
+    private static List<StudyCafeLockerPass> getStudyCafeLockerPasses(List<String> lines) {
+        List<StudyCafeLockerPass> lockerPasses = new ArrayList<>();
+        for (String line : lines) {
+            ...(생략)
+        }
+
+        return lockerPasses;
+    }
+```
