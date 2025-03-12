@@ -36,3 +36,100 @@
 ✔️ DIP : 의존관계 역전을 적용할만한 곳은 없는지
 
 ✔️ 일급 컬렉션
+
+
+## 🤔 내가 고민한 리펙토링
+1. SRP관점에서 `readStudyCafePasses()`와`readLockerPasses()` 메소드안에 파일을 읽는 기능을 분리해서 `readStudyCafePasses`와 `readLockerPasses`가 파일 읽기에 대한 책임을 가지지 않도록 해야겠다고 생각함. <br>
+[**리펙토링 전**]
+```java
+// StudyCafeFileHandler.java
+    public List<StudyCafePass> readStudyCafePasses() {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get("src/main/resources/cleancode/studycafe/pass-list.csv"));
+            List<StudyCafePass> studyCafePasses = new ArrayList<>();
+            for (String line : lines) {
+              ...(생략)
+            }
+            return studyCafePasses;
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽는데 실패했습니다.", e);
+        }
+    }
+```
+[**리펙토링 후**]
+```java
+// StudyCafeFileHandler.java
+    public List<StudyCafePass> readStudyCafePasses() {
+            List<String> lines = getReadAllLines(PASS_LIST_FILE);
+            List<StudyCafePass> studyCafePasses = new ArrayList<>();
+            for (String line : lines) {
+             ...(생략)
+            }
+
+            return studyCafePasses;
+    }
+
+    private static List<String> getReadAllLines(String filePath) {
+        try {
+            return Files.readAllLines(Paths.get(filePath));
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽는데 실패했습니다.", e);
+        }
+    }
+```
+
+<br>
+<br>
+
+2. `StudyCafeFileHandler.java`에서 파일경로를 매직스트링(상수로 추출)으로 사용 <br>
+
+[**리펙토링 전**]
+```java
+    public List<StudyCafePass> readStudyCafePasses() {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get("src/main/resources/cleancode/studycafe/pass-list.csv"));
+              ...(생략)
+            return studyCafePasses;
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽는데 실패했습니다.", e);
+        }
+    }
+
+    public List<StudyCafePass> readLockerPasses() {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get("src/main/resources/cleancode/studycafe/locker.csv"));
+              ...(생략)
+            return lockerPasses;
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽는데 실패했습니다.", e);
+        }
+    }
+```
+
+[**리펙토링 후**]
+```java
+    private static final String BASE_FILE_PATH = "src/main/resources/cleancode/studycafe/";
+    private static final String PASS_LIST_FILE = BASE_FILE_PATH + "pass-list.csv";
+    private static final String LOCKER_PASS_FILE = BASE_FILE_PATH + "locker.csv";
+
+    public List<StudyCafePass> readStudyCafePasses() {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(PASS_LIST_FILE));
+              ...(생략)
+            return studyCafePasses;
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽는데 실패했습니다.", e);
+        }
+    }
+
+    public List<StudyCafePass> readLockerPasses() {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(LOCKER_PASS_FILE));
+              ...(생략)
+            return lockerPasses;
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽는데 실패했습니다.", e);
+        }
+    }
+```
+   
