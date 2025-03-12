@@ -88,10 +88,9 @@ public class StudyCafePassMachine {
 
     private static List<StudyCafePass> getStudyCafePasses(StudyCafePassType studyCafePassType) {
         List<StudyCafePass> studyCafePasses = STUDY_CAFE_FILE_HANDLER.readStudyCafePasses();
-        List<StudyCafePass> passes = studyCafePasses.stream()
+        return studyCafePasses.stream()
             .filter(studyCafePass -> studyCafePass.getPassType() == studyCafePassType)
             .toList();
-        return passes;
     }
 
 }
